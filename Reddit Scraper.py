@@ -20,12 +20,14 @@ root.title("Reddit Scraper")
 # Set size of window
 root.geometry('1000x600')
 posts = []
+numPosts = 10
 
 # Set up the banner
 banner = Label(root, text="Subbreddit goes here",bg="#FF4500", height=1, width=500, anchor=W,
 font=("Times New Roman", 32, "bold"))
 banner.pack()
 
+#To test you must visit https://www.reddit.com/prefs/apps and create an app and input given data
 async def main():
     reddit = asyncpraw.Reddit(client_id="----------------", client_secret="---------------",
                               user_agent="------------")
@@ -34,17 +36,24 @@ async def main():
 
     #posts = []
     subreddit = await reddit.subreddit("memes")
-    async for submission in subreddit.hot(limit=10):
-        posts.append({
-            "title": submission.title,
-            "author": str(submission.author),
-            "image": submission.url
-        })
+    async for submission in subreddit.hot(limit=numPosts):
+        if ".jpeg" in str(submission.url) or ".jpg" in str(submission.url) or ".png" in str(submission.url):
+            print(str(submission.url))
+            posts.append({
+                "title": submission.title,
+                "author": str(submission.author),
+                "image": submission.url
+            })
 
-    for i in range(10):
-        print(posts[i])
+    # for i in range(numPosts):
+    #     print(posts[i])
 
-    print(posts[4]["image"])
+    # toBeDel = []
+    # for i in range(numPosts):
+    #     if ".jpeg" or ".png" or ".jpg" not in posts[i]["image"]:
+    #         del posts[i]
+
+
 
     with urllib.request.urlopen("https://i.redd.it/y2r4uhez26sc1.gif") as u:
         raw_data = u.read()
