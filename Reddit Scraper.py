@@ -8,8 +8,74 @@ import asyncio
 from PIL import ImageTk, Image
 import requests
 from io import BytesIO
+import os
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv, find_dotenv
+import random
+
+# A discord bot token will have to be provided
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+
+# Sets up the client to start the bot
+client = discord.Client(intents=discord.Intents.default())
+
+# When the bot goes online, print to the console
+@client.event
+async def on_ready():
+    print(f'{client.user} has connected to Discord!')
+
+# Set up commands for the bot
+intents = discord.Intents.all()
+intents.message_content = True
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Command that takes a subreddit and grabs a random picture from it, and sends it as a message in discord
+@bot.command()
+async def meme(ctx, arg):
+    print("success")
+    posts = []
+    posts_grabbed = 0
+    # To test you must visit https://www.reddit.com/prefs/apps and create an app and input given data
+    reddit_dis = asyncpraw.Reddit(client_id="----------------", client_secret="---------------",
+                              user_agent="------------")
+    # Set the subreddit to be searched
+    subreddit = await reddit_dis.subreddit(str(arg))
+    # Grab the first 50 hot posts and select those with images
+    async for submission in subreddit.hot(limit=50):
+        if ".jpeg" in str(submission.url) or ".jpg" in str(submission.url) or ".png" in str(submission.url):
+            # Add them to a dictionary
+            posts.append({
+                "title": submission.title,
+                "author": str(submission.author),
+                "image": submission.url
+            })
+            posts_grabbed += 1
+
+    # Turn the image urls into data that can be used
+    for i in range(posts_grabbed):
+        with urllib.request.urlopen(posts[i]["image"]) as u:
+            raw_data = u.read()
+        posts[i]["image"] = raw_data
+
+    # Create a random number to select a post to be displayed
+    random_num = random.randrange(posts_grabbed)
+
+    #Send the image and title
+    image = io.BytesIO(posts[random_num]["image"])
+    print("photo sent")
+    await ctx.send(posts[random_num]["title"])
+    await ctx.send(file=discord.File(image, 'cool_image.jpeg'))
+
+# run the bot
+bot.run(TOKEN)
+client.run(TOKEN)
 
 
+
+
+'''
 # root window
 root = Tk()
 
@@ -105,3 +171,4 @@ def regular():
 regular()
 
 root.mainloop()
+'''
